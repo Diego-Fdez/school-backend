@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 import uuid
-from app.users.models.users_models import User_Response
+from app.users.models.users_models import User_Login
 
 # creating a model for the login
 class Login(BaseModel):
@@ -14,5 +14,5 @@ class TokenData(BaseModel):
 # create a model for the login response
 class LoginResponse(BaseModel):
     access_token: str
-    user: User_Response
+    user: User_Login
     token_type: str
