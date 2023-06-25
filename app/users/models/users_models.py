@@ -15,21 +15,25 @@ class User_Create(User_Base):
     address: Optional[str] = None
 
 # create a pydantic model for user response
-class User_Response(User_Base):
+class User_Login(User_Base):
     id: uuid.UUID
-    user: User_Base
     is_superuser: bool
     is_admin: bool
     is_teacher: bool
     class Config:
         orm_mode = True
 
+class User_Response(User_Login):
+    email: EmailStr
+    phone: Optional[str] = None
+    address: Optional[str] = None
+
 # create a pydantic model for update user
-class User_Update(User_Base):
+class User_Update(BaseModel):
     firstname: Optional[str] = None
     lastname: Optional[str] = None
     email: Optional[EmailStr] = None
     phone: Optional[str] = None
     address: Optional[str] = None
-    institution: uuid.UUID = None
+    institution_id: uuid.UUID = None
     password: Optional[str] = None
