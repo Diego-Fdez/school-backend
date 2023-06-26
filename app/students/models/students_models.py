@@ -13,25 +13,16 @@ class Student_Create(BaseModel):
     address: Optional[str] = None
     phone: Optional[str] = None
     institution_id: uuid.UUID
+
+class All_Students(Student_Create):
+    id: uuid.UUID
+    class Config:
+        orm_mode = True
     
 # create a pydantic model for students response
-class Student_Response(Student_Create):
-    id: uuid.UUID
+class Student_Response(All_Students):
     level_name: str
     institution_name: str
     user_id: uuid.UUID
     person_id: uuid.UUID
-    class Config:
-        orm_mode = True
-
-class Student_Update(BaseModel):
-    identification: Optional[str] = None
-    contact: Optional[str] = None
-    level_id: Optional[uuid.UUID] = None
-    observations: Optional[str] = None
-    user_id: Optional[uuid.UUID] = None
-    firstname: Optional[str] = None
-    lastname: Optional[str] = None
-    address: Optional[str] = None
-    phone: Optional[str] = None
-    institution_id: Optional[uuid.UUID] = None
+    created_by: str
