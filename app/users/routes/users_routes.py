@@ -148,14 +148,14 @@ async def update_user(id: uuid.UUID, request: Request, user: User_Update, db: Se
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, 
                             detail="You are not authorized to perform this action")
     # Parse the data in the body of the request
-    datos_actualizados = await request.json()
+    updated_data = await request.json()
 
     # Update the fields provided in the request body
-    for campo, valor in datos_actualizados.items():
-        if hasattr(user_exists, campo):
-            setattr(user_exists, campo, valor)
-        elif hasattr(user_exists.person, campo):
-            setattr(user_exists.person, campo, valor)
+    for field, value in updated_data.items():
+        if hasattr(user_exists, field):
+            setattr(user_exists, field, value)
+        elif hasattr(user_exists.person, field):
+            setattr(user_exists.person, field, value)
 
     # Update the password and hash it
     if user.password:
