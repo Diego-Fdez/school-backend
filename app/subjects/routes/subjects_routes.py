@@ -34,7 +34,7 @@ async def create_subject(subject: Subject_Create, db: Session = Depends(get_db),
 @router.get("/", response_description="Get all subjects", response_model=list[Subject_Response],
             status_code=status.HTTP_200_OK)
 async def get_all_subjects(db: Session = Depends(get_db), search: Optional[str] = ""):
-    subjects = db.query(Subject_Schema).filter(Subject_Schema.name.ilike(f"{search}")).all()
+    subjects = db.query(Subject_Schema).filter(Subject_Schema.name.ilike(f"%{search}%")).all()
 
     #if no subjects are found, raise an exception
     if not subjects:
@@ -60,7 +60,7 @@ async def get_subject_by_id(subject_id: uuid.UUID, db: Session = Depends(get_db)
 
 # define a route for updating a subject
 
-@router.put("/{subject_id}", response_description="Update a subject", response_model=Subject_Response,
+@router.patch("/{subject_id}", response_description="Update a subject", response_model=Subject_Response,
             status_code=status.HTTP_200_OK)
 async def update_subject(subject_id: uuid.UUID, subject: Subject_Create, db: Session = Depends(get_db),
                             current_user: int = Depends(oauth2.get_current_user)):
