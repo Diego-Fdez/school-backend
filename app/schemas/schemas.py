@@ -55,6 +55,17 @@ class Student_Schema(Base):
     user = relationship('User_Schema')
     observations = Column(String(255), nullable=True)
 
+# create a class for the teachers in students schema
+class Teacher_Schema(Base):
+    __tablename__ = "teachers"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False)
+    student_id = Column(UUID, ForeignKey("students.id", ondelete='CASCADE'), nullable=False)
+    student = relationship('Student_Schema')
+    teacher_id = Column(UUID, ForeignKey("users.id", ondelete='CASCADE'), nullable=False)
+    teacher = relationship('User_Schema')
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
+    updated_at = Column(TIMESTAMP(timezone=True), nullable=True, onupdate=func.now(), server_default=text('now()'))
+
 # create a class for the levels schema
 class Academic_Degree_Schema(Base):
     __tablename__ = "levels"
@@ -90,10 +101,28 @@ class Section_Schema(Base):
     name = Column(String(150), nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
     updated_at = Column(TIMESTAMP(timezone=True), nullable=True, onupdate=func.now(), server_default=text('now()'))
-    user_id = Column(UUID, ForeignKey("users.id", ondelete='CASCADE'), nullable=False)
-    user = relationship('User_Schema')
+
+# create a class for the students in sections schema
+class Student_In_Section_Schema(Base):
+    __tablename__ = "students_in_sections"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False)
+    section_id = Column(UUID, ForeignKey("sections.id", ondelete='CASCADE'), nullable=False)
+    section = relationship('Section_Schema')
     student_id = Column(UUID, ForeignKey("students.id", ondelete='CASCADE'), nullable=False)
     student = relationship('Student_Schema')
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
+    updated_at = Column(TIMESTAMP(timezone=True), nullable=True, onupdate=func.now(), server_default=text('now()'))
+
+# create a class for the teachers in sections schema
+class Teacher_In_Section_Schema(Base):
+    __tablename__ = "teachers_in_sections"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False)
+    section_id = Column(UUID, ForeignKey("sections.id", ondelete='CASCADE'), nullable=False)
+    section = relationship('Section_Schema')
+    teacher_id = Column(UUID, ForeignKey("users.id", ondelete='CASCADE'), nullable=False)
+    teacher = relationship('User_Schema')
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
+    updated_at = Column(TIMESTAMP(timezone=True), nullable=True, onupdate=func.now(), server_default=text('now()'))
 
 # create a class for the assistance schema
 class Assistance_Schema(Base):
