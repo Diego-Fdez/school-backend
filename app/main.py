@@ -6,8 +6,8 @@ from .students.routes import students_routes
 from .levels.routes import levels_routes
 from .subjects.routes import subjects_routes
 from .school_period.routes import school_period_routes
-from .rooms_class.routes import rooms_class_routes
-from .rooms_class.routes import students_in_classrooms_routes
+from .rooms_class.routes import rooms_class_routes, students_in_classrooms_routes
+from .teachers.routes import teachers_routes
 from fastapi.middleware.cors import CORSMiddleware
 
 origins = [
@@ -42,6 +42,7 @@ app.include_router(subjects_routes.router)
 app.include_router(school_period_routes.router)
 app.include_router(rooms_class_routes.router)
 app.include_router(students_in_classrooms_routes.router)
+app.include_router(teachers_routes.router)
 
 # Define the root route
 @app.get("/")
