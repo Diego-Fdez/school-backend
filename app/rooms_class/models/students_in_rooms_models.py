@@ -1,6 +1,5 @@
 from pydantic import BaseModel
 import uuid
-from datetime import datetime
 
 # create a model for the students in classrooms
 class Student_Classrooms(BaseModel):

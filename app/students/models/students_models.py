@@ -14,6 +14,10 @@ class Student_Create(BaseModel):
     phone: Optional[str] = None
     institution_id: uuid.UUID
 
+class Teachers(BaseModel):
+    teacher_id: uuid.UUID
+    teacher_name: str
+
 class All_Students(Student_Create):
     id: uuid.UUID
     class Config:
@@ -26,3 +30,4 @@ class Student_Response(All_Students):
     user_id: uuid.UUID
     person_id: uuid.UUID
     created_by: str
+    teachers: list[Teachers]
