@@ -4,7 +4,7 @@ import uuid
 from typing import Optional
 from app.students.models.students_models import Student_Create, Student_Response, All_Students
 from app.database.database import get_db
-from app.schemas.schemas import Student_Schema, Person_Schema, Academic_Degree_Schema, Institution_Schema, User_Schema
+from app.schemas.schemas import Student_Schema, Person_Schema, Academic_Degree_Schema, Institution_Schema, User_Schema, Teacher_Schema
 from app.middleware import oauth2
 
 # create an instance of the APIRouter class
@@ -16,7 +16,7 @@ router = APIRouter(
 
 # define a route to create a student
 @router.post("/", response_description="Create a new student", status_code=status.HTTP_201_CREATED)
-def create_student(student: Student_Create, db: Session = Depends(get_db), 
+async def create_student(student: Student_Create, db: Session = Depends(get_db), 
                     current_user: int = Depends(oauth2.get_current_user)):
     if (not current_user.is_admin) | (not current_user.is_superuser):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
@@ -72,7 +72,7 @@ def create_student(student: Student_Create, db: Session = Depends(get_db),
 # define a route to get all students
 @router.get("/", response_description="Get all students", response_model=list[All_Students],
             status_code=status.HTTP_200_OK)
-def get_students(db: Session = Depends(get_db),
+async def get_students(db: Session = Depends(get_db),
                     current_user: int = Depends(oauth2.get_current_user),
                     limit: int = 10, skip: int = 0, search: Optional[str] = ""):
     if (not current_user.is_admin) | (not current_user.is_superuser):
@@ -117,35 +117,42 @@ def get_students(db: Session = Depends(get_db),
 @router.get("/{id}", response_description="Get a student by id", response_model=Student_Response,
             status_code=status.HTTP_200_OK)
 async def get_student(id: str, db: Session = Depends(get_db)):
-    student = db.query(Student_Schema).options(joinedload(Student_Schema.person)
-                        ).join(Academic_Degree_Schema, Student_Schema.level_id == Academic_Degree_Schema.id, isouter=True
-                        ).join(Person_Schema, Student_Schema.person_id == Person_Schema.id, isouter=True
-                        ).join(Institution_Schema, Person_Schema.institution_id == Institution_Schema.id, isouter=True
-                        ).join(User_Schema, User_Schema.id == Student_Schema.user_id, isouter=True
-                        ).filter(Student_Schema.id == id).first()
+    student = db.query(Teacher_Schema).options(joinedload(Teacher_Schema.student)
+                        ).filter(Student_Schema.id == id).all()
     # if the student does not exist, raise an exception
     if not student:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail="Student not found")
     # create a new dictionary to store the student data
+
+    teachers = []
+
+    for i in student:
+        teachers_info = {
+            "teacher_id": i.teacher_id,
+            "teacher_name": f"{i.teacher.person.firstname} {i.teacher.person.lastname}",
+        }
+        teachers.append(teachers_info)
+
     user_data = {
-                "id": student.id,
-                "firstname": student.person.firstname,
-                "lastname": student.person.lastname,
-                "address": student.person.address,
-                "phone": student.person.phone,
-                "institution_id": student.person.institution_id,
-                "institution_name": student.person.institution.name,
-                "level_id": student.level_id,
-                "level_name": student.level.name,
-                "contact": student.contact,
-                "observations": student.observations,
-                "person_id": student.person_id,
-                "identification": student.identification,
-                "user_id": student.user_id,
-                "created_by": f"{student.user.person.firstname} {student.user.person.lastname}",
+                "id": student[0].id,
+                "firstname": student[0].student.person.firstname,
+                "lastname": student[0].student.person.lastname,
+                "address": student[0].student.person.address,
+                "phone": student[0].student.person.phone,
+                "institution_id": student[0].student.person.institution_id,
+                "institution_name": student[0].student.person.institution.name,
+                "level_id": student[0].student.level_id,
+                "level_name": student[0].student.level.name,
+                "contact": student[0].student.contact,
+                "observations": student[0].student.observations,
+                "person_id": student[0].student.person_id,
+                "identification": student[0].student.identification,
+                "user_id": student[0].student.user_id,
+                "created_by": f"{student[0].student.user.person.firstname} {student[0].student.user.person.lastname}",
+                "teachers": teachers,
             }
-    
+
     return user_data
 
 
@@ -153,35 +160,41 @@ async def get_student(id: str, db: Session = Depends(get_db)):
 @router.get("/{identification}/identification", response_description="Get a student by identification (DNI)", 
             response_model=Student_Response, status_code=status.HTTP_200_OK)
 async def get_student(identification: str, db: Session = Depends(get_db)):
-    student = db.query(Student_Schema).options(joinedload(Student_Schema.person)
-                        ).join(Academic_Degree_Schema, Student_Schema.level_id == Academic_Degree_Schema.id, isouter=True
-                        ).join(Person_Schema, Student_Schema.person_id == Person_Schema.id, isouter=True
-                        ).join(Institution_Schema, Person_Schema.institution_id == Institution_Schema.id, isouter=True
-                        ).join(User_Schema, User_Schema.id == Student_Schema.user_id, isouter=True
-                        ).filter(Student_Schema.identification == identification).first()
+    student = db.query(Teacher_Schema).options(joinedload(Teacher_Schema.student)
+                        ).filter(Student_Schema.identification == identification).all()
     # if the student does not exist, raise an exception
     if not student:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail="Student not found")
     # create a new dictionary to store the student data
+    teachers = []
+
+    for i in student:
+        teachers_info = {
+            "teacher_id": i.teacher_id,
+            "teacher_name": f"{i.teacher.person.firstname} {i.teacher.person.lastname}",
+        }
+        teachers.append(teachers_info)
+
     user_data = {
-                "id": student.id,
-                "firstname": student.person.firstname,
-                "lastname": student.person.lastname,
-                "address": student.person.address,
-                "phone": student.person.phone,
-                "institution_id": student.person.institution_id,
-                "institution_name": student.person.institution.name,
-                "level_id": student.level_id,
-                "level_name": student.level.name,
-                "contact": student.contact,
-                "observations": student.observations,
-                "person_id": student.person_id,
-                "identification": student.identification,
-                "user_id": student.user_id,
-                "created_by": f"{student.user.person.firstname} {student.user.person.lastname}",
+                "id": student[0].id,
+                "firstname": student[0].student.person.firstname,
+                "lastname": student[0].student.person.lastname,
+                "address": student[0].student.person.address,
+                "phone": student[0].student.person.phone,
+                "institution_id": student[0].student.person.institution_id,
+                "institution_name": student[0].student.person.institution.name,
+                "level_id": student[0].student.level_id,
+                "level_name": student[0].student.level.name,
+                "contact": student[0].student.contact,
+                "observations": student[0].student.observations,
+                "person_id": student[0].student.person_id,
+                "identification": student[0].student.identification,
+                "user_id": student[0].student.user_id,
+                "created_by": f"{student[0].student.user.person.firstname} {student[0].student.user.person.lastname}",
+                "teachers": teachers,
             }
-    
+
     return user_data
 
 

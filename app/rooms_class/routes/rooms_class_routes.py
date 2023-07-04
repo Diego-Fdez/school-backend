@@ -1,10 +1,10 @@
-from fastapi import APIRouter, status, HTTPException, Depends, Request
-from sqlalchemy.orm import Session, joinedload
+from fastapi import APIRouter, status, HTTPException, Depends
+from sqlalchemy.orm import Session
 import uuid
 from typing import Optional
 from app.rooms_class.models.rooms_class_models import RoomBase, All_Rooms
 from app.database.database import get_db
-from app.schemas.schemas import Section_Schema
+from app.schemas.schemas import Section_Schema, Student_In_Section_Schema, Person_Schema, Student_Schema
 from app.middleware import oauth2
 
 # create an instance of the APIRouter class
@@ -45,17 +45,29 @@ async def get_all_rooms(db: Session = Depends(get_db), search: Optional[str] = "
 
 
 # define a route to get a single room
-@router.get("/{room_id}", response_description="Get a single room by id", response_model=All_Rooms,
+@router.get("/{room_id}", response_description="Get a single room by id",
               status_code=status.HTTP_200_OK)
 async def get_single_room(room_id: uuid.UUID, db: Session = Depends(get_db)):
-    room = db.query(Section_Schema).filter(Section_Schema.id == room_id).first()
+    room = db.query(Student_In_Section_Schema).join(Section_Schema, Section_Schema.id == Student_In_Section_Schema.section_id
+                                        ).join(Student_Schema, Student_Schema.id == Student_In_Section_Schema.student_id
+                                        ).join(Person_Schema, Person_Schema.id == Student_Schema.person_id
+                                        ).filter(Section_Schema.id == room_id).all()
     
     # if no room found
     if not room:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"Room with id: {room_id} not found")
+    
+    result = []
 
-    return room
+    for i in room:
+        room_data = {
+            "student_id": i.student_id,
+            "name": f"{i.student.person.firstname} {i.student.person.lastname}",
+        }
+        result.append(room_data)
+    
+    return {"id": room_id, "name": room[0].section.name, "students": result}
 
 
 # define a route to update a room
